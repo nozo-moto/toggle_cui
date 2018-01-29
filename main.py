@@ -2,7 +2,9 @@ import urllib.request, json
 from pytz import timezone
 from datetime import datetime
 import base64
+import json
 import settings
+
 
 class Toggle:
     def __init__(self, api_token: str):
@@ -22,7 +24,7 @@ class Toggle:
     def format_dict_to_json(self, data: dict):
         return json.dumps(data).encode("utf-8")
 
-    def send_request(self, url: str, method: str, header: dict, data):
+    def send_request(self, url: str, method: str, header: dict, data=None):
         req = urllib.request.Request(
             url,
             data=data,
@@ -30,10 +32,10 @@ class Toggle:
             headers=header,
         )
         with urllib.request.urlopen(req) as res:
-            response_body = res.read()
+            response_body = res.read().decode('utf-8')
         return response_body
 
-    def start_toggle(self, description: str, tag: list, pid: int):
+    def start_toggle(self, description: str, tag: list, pid: int) -> dict:
         url = "https://www.toggl.com/api/v8/time_entries/start"
         data = {
             "time_entry":{
@@ -42,13 +44,35 @@ class Toggle:
                 "created_with":"python",
             }
         }
-        self.send_request(
+        res = self.send_request(
             url=url,
             method="POST",
             data=self.format_dict_to_json(data),
             header=self.header
         )
+        res_dict = json.loads(res)
+        return res_dict
+    
+    def runnning_toggle(self) -> dict:
+        url = "https://www.toggl.com/api/v8/time_entries/current"
+        res = self.send_request(
+            url=url,
+            method="GET",
+            header=self.header
+        )
+        res_dict = json.loads(res)
+        return res_dict
 
+    def stop_toggle(self, time_entry_id: str) -> dict:
+        url = 'https://www.toggl.com/api/v8/time_entries/{}/stop'.format(time_entry_id)
+        res = self.send_request(
+            url=url,
+            method="PUT",
+            header=self.header
+        )
+        res_dict = json.loads(res)
+        return res_dict
+        
 def now_time()-> str:
     now_time = datetime.now(
         timezone('UTC')).astimezone(timezone('Asia/Tokyo')
@@ -64,8 +88,9 @@ def now_time()-> str:
 
 if __name__ == '__main__':
     tg = Toggle(settings.ACCSES_TOKEN)
-    tg.start_toggle(
-        description='APITEST',
-        tag=["billed"],
-        pid=123,
-    )
+    tg.runnning_toggle()
+    # tg.start_toggle(
+    #     description='APITEST',
+    #     tag=["billed"],
+    #     pid=123,
+    # )
