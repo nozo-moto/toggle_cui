@@ -26,7 +26,6 @@ class Toggle:
             method=method,
             headers=header,
         )
-        print(req.data, req.full_url, req.header_items())
         with urllib.request.urlopen(req) as res:
             response_body = res.read()
         return response_body
