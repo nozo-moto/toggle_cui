@@ -18,6 +18,9 @@ class Toggle:
         return base64.b64encode(
             '{}:api_token'.format(password).encode('utf-8')
         ).decode('utf-8')
+    
+    def format_dict_to_json(self, data: dict):
+        return json.dumps(data).encode("utf-8")
 
     def send_request(self, url: str, method: str, header: dict, data):
         req = urllib.request.Request(
@@ -29,9 +32,6 @@ class Toggle:
         with urllib.request.urlopen(req) as res:
             response_body = res.read()
         return response_body
-
-    def format_dict_to_json(self, data: dict):
-        return json.dumps(data).encode("utf-8")
 
     def start_toggle(self, description: str, tag: list, pid: int):
         url = "https://www.toggl.com/api/v8/time_entries/start"
